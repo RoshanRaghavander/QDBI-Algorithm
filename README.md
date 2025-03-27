@@ -26,7 +26,7 @@ QBDI is a novel framework that integrates quantum computing principles with biol
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/qbdi-implementation.git
+git clone https://github.com/RoshanRaghavander/QDBI-Algorithm.git
 cd qbdi-implementation
 
 # Install required packages
