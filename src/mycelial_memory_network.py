@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 from scipy.spatial import Voronoi, voronoi_plot_2d
+import os
 
 class MycelialMemoryNetwork:
     """
@@ -128,7 +129,7 @@ class MycelialMemoryNetwork:
         mapping = {i: i if i < node_to_remove else i-1 for i in range(len(self.memory_nodes)+1)}
         self.connections = nx.relabel_nodes(self.connections, mapping)
     
-    def query_memory(self, position, uav_idx=None, k=3):
+    def query_memory(self, position, uav_idx=None, k=3, update_usage=True):
         """
         Query the memory network for information at a given position.
         
@@ -162,16 +163,14 @@ class MycelialMemoryNetwork:
             weights = 1.0 / (nearest_distances + 1e-10)
             weights = weights / np.sum(weights)  # Normalize
         
-        # Get values from nearest nodes
         values = [self.memory_nodes[idx]['value'] for idx in nearest_indices]
         
-        # Update access count for these nodes
-        for idx in nearest_indices:
-            self.memory_nodes[idx]['access_count'] += 1
+        if update_usage:
+            for idx in nearest_indices:
+                self.memory_nodes[idx]['access_count'] += 1
         
-        # Record access pattern for this UAV
-        if uav_idx is not None:
-            self.uav_access_patterns[uav_idx].append(nearest_indices)
+            if uav_idx is not None:
+                self.uav_access_patterns[uav_idx].append(nearest_indices)
         
         return values, weights
     
@@ -224,7 +223,10 @@ class MycelialMemoryNetwork:
         
         plt.title(title)
         plt.axis('off')
-        plt.savefig('/home/ubuntu/qbdi_implementation/memory_network.png')
+        results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+        os.makedirs(results_dir, exist_ok=True)
+        save_path = os.path.join(results_dir, "memory_network.png")
+        plt.savefig(save_path)
         plt.close()
     
     def visualize_memory_heatmap(self, grid_size=20, title="Memory Value Heatmap"):
@@ -253,7 +255,7 @@ class MycelialMemoryNetwork:
         for i in range(grid_size):
             for j in range(grid_size):
                 position = np.array([X[i, j], Y[i, j]])
-                values, weights = self.query_memory(position)
+                values, weights = self.query_memory(position, update_usage=False)
                 
                 if values is not None and all(isinstance(v, (int, float)) for v in values):
                     # Weighted average of values
@@ -269,7 +271,10 @@ class MycelialMemoryNetwork:
         plt.title(title)
         plt.xlabel('X Position')
         plt.ylabel('Y Position')
-        plt.savefig('/home/ubuntu/qbdi_implementation/memory_heatmap.png')
+        results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+        os.makedirs(results_dir, exist_ok=True)
+        save_path = os.path.join(results_dir, "memory_heatmap.png")
+        plt.savefig(save_path)
         plt.close()
 
 

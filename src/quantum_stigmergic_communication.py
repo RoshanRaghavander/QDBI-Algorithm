@@ -6,6 +6,7 @@ This module implements the entanglement-inspired implicit coordination model.
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import pdist, squareform
+import os
 
 class QuantumStigmergicCommunication:
     """
@@ -44,14 +45,10 @@ class QuantumStigmergicCommunication:
         self.positions[uav_index] = position
         
     def set_uav_state(self, uav_index, state):
-        """
-        Set the quantum-inspired state of a UAV.
-        
-        Args:
-            uav_index (int): Index of the UAV
-            state (numpy.ndarray): 2D state vector
-        """
-        self.states[uav_index] = state / np.linalg.norm(state)  # Normalize state
+        self.states[uav_index] = state
+        norm = np.linalg.norm(self.states[uav_index])
+        if norm > 0:
+            self.states[uav_index] = self.states[uav_index] / norm
         
     def calculate_spatial_correlation(self):
         """
@@ -134,7 +131,10 @@ class QuantumStigmergicCommunication:
         plt.title(title)
         plt.xticks(range(self.num_uavs))
         plt.yticks(range(self.num_uavs))
-        plt.savefig('/home/ubuntu/qbdi_implementation/communication_matrix.png')
+        results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+        os.makedirs(results_dir, exist_ok=True)
+        save_path = os.path.join(results_dir, "communication_matrix.png")
+        plt.savefig(save_path)
         plt.close()
         
     def visualize_uav_positions(self, title="UAV Positions with Communication Links"):
@@ -168,7 +168,10 @@ class QuantumStigmergicCommunication:
         plt.ylabel('Y Position')
         plt.title(title)
         plt.grid(True, alpha=0.3)
-        plt.savefig('/home/ubuntu/qbdi_implementation/uav_positions.png')
+        results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+        os.makedirs(results_dir, exist_ok=True)
+        save_path = os.path.join(results_dir, "uav_positions.png")
+        plt.savefig(save_path)
         plt.close()
 
 

@@ -6,6 +6,7 @@ This module implements the QAOA-based quantum decision model as described in the
 import numpy as np
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
+import os
 
 class QAOADecisionModel:
     """
@@ -67,19 +68,17 @@ class QAOADecisionModel:
         if z is None:
             z = self.z
             
-        # First term: ∑(i,j) Jij zi zj
         interaction_term = 0
         for i in range(self.num_uavs):
-            for j in range(self.num_uavs):
-                if i != j:
-                    interaction_term += self.J[i, j] * z[i] * z[j]
+            for j in range(i + 1, self.num_uavs):
+                interaction_term += self.J[i, j] * z[i] * z[j]
         
         # Second term: ∑i hi zi
         field_term = np.sum(self.h * z)
         
         return interaction_term + field_term
     
-    def optimize_decision_state(self, num_iterations=100):
+    def optimize_decision_state(self, num_iterations=100, num_restarts=10):
         """
         Optimize the decision state to minimize the Hamiltonian.
         
@@ -92,28 +91,29 @@ class QAOADecisionModel:
         Returns:
             numpy.ndarray: Optimized decision state vector
         """
-        # Initial random state
-        initial_state = 2 * np.random.randint(0, 2, size=self.num_uavs) - 1
+        best_state = None
+        best_energy = None
         
-        # Define the objective function for optimization
-        def objective(x):
-            # Convert continuous values to binary decision states
-            binary_x = np.sign(x)
-            return self.compute_hamiltonian(binary_x)
+        for _ in range(num_restarts):
+            state = 2 * np.random.randint(0, 2, size=self.num_uavs) - 1
+            energy = self.compute_hamiltonian(state)
+            
+            for _ in range(num_iterations):
+                flip_index = np.random.randint(0, self.num_uavs)
+                candidate = state.copy()
+                candidate[flip_index] *= -1
+                candidate_energy = self.compute_hamiltonian(candidate)
+                
+                if candidate_energy < energy:
+                    state = candidate
+                    energy = candidate_energy
+            
+            if best_energy is None or energy < best_energy:
+                best_state = state
+                best_energy = energy
         
-        # Perform optimization
-        result = minimize(
-            objective,
-            initial_state,
-            method='BFGS',
-            options={'maxiter': num_iterations}
-        )
-        
-        # Convert the result to binary decision states
-        optimal_state = np.sign(result.x)
-        self.z = optimal_state
-        
-        return optimal_state
+        self.z = best_state
+        return best_state
     
     def calculate_energy_difference(self, optimal_state):
         """
@@ -147,7 +147,10 @@ class QAOADecisionModel:
         plt.xticks(range(self.num_uavs))
         plt.yticks([-1, 1])
         plt.grid(True, alpha=0.3)
-        plt.savefig('/home/ubuntu/qbdi_implementation/decision_states.png')
+        results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+        os.makedirs(results_dir, exist_ok=True)
+        save_path = os.path.join(results_dir, "decision_states.png")
+        plt.savefig(save_path)
         plt.close()
 
 

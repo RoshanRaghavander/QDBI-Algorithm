@@ -11,11 +11,10 @@ from tqdm import tqdm
 import time
 import os
 
-# Import QBDI components
-from qaoa_decision_model import QAOADecisionModel
-from entropy_swarm_coordination import EntropySwarmCoordination
-from quantum_stigmergic_communication import QuantumStigmergicCommunication
-from mycelial_memory_network import MycelialMemoryNetwork
+from .qaoa_decision_model import QAOADecisionModel
+from .entropy_swarm_coordination import EntropySwarmCoordination
+from .quantum_stigmergic_communication import QuantumStigmergicCommunication
+from .mycelial_memory_network import MycelialMemoryNetwork
 
 class UAV:
     """
@@ -193,15 +192,14 @@ class QBDISwarmSimulation:
         for i, uav in enumerate(self.uavs):
             position = uav.get_position()
             
-            # Calculate field based on obstacles
             field_value = 0
             for obstacle in self.obstacles:
-                # 2D distance to obstacle
                 distance = np.linalg.norm(obstacle.position - position[:2])
-                
-                # Field strength inversely proportional to distance
                 if distance < obstacle.radius * 3:
-                    field_value -= 1.0 / (distance - obstacle.radius + 0.1)
+                    delta = distance - obstacle.radius + 0.1
+                    if delta < 0.1:
+                        delta = 0.1
+                    field_value -= 1.0 / delta
             
             # Add target attraction
             target_distance = np.linalg.norm(self.target_position - position)
@@ -217,23 +215,24 @@ class QBDISwarmSimulation:
         for i, uav in enumerate(self.uavs):
             position = uav.get_position()
             
-            # Create a 2D quantum state based on position and obstacles
             state = np.zeros(2)
             
-            # Component based on position relative to target
             direction = self.target_position - position
             state[0] = np.arctan2(direction[1], direction[0]) / np.pi
             
-            # Component based on obstacle avoidance
             obstacle_influence = 0
             for obstacle in self.obstacles:
                 distance = np.linalg.norm(obstacle.position - position[:2])
                 if distance < obstacle.radius * 3:
-                    obstacle_influence += 1.0 / (distance - obstacle.radius + 0.1)
+                    delta = distance - obstacle.radius + 0.1
+                    if delta < 0.1:
+                        delta = 0.1
+                    obstacle_influence += 1.0 / delta
             state[1] = np.tanh(obstacle_influence)
             
-            # Normalize state
-            state = state / np.linalg.norm(state)
+            norm = np.linalg.norm(state)
+            if norm > 0:
+                state = state / norm
             
             # Update UAV's quantum state
             uav.quantum_state = state
@@ -329,17 +328,11 @@ class QBDISwarmSimulation:
         """
         Update UAV positions based on QBDI algorithms.
         """
-        # Update UAV positions in SQEC model
         for i, uav in enumerate(self.uavs):
             self.sqec.set_uav_position(i, uav.get_position())
         
-        # Update communication matrix
         self.sqec.update_communication_matrix()
         
-        # Calculate swarm entropy
-        swarm_entropy = self.entropy_coord.calculate_swarm_entropy()
-        
-        # Update UAV positions
         for i, uav in enumerate(self.uavs):
             position = uav.get_position()
             
@@ -490,7 +483,7 @@ class QBDISwarmSimulation:
         
         return results
     
-    def visualize_simulation(self, results, save_path='/home/ubuntu/qbdi_implementation/simulation_result.png'):
+    def visualize_simulation(self, results, save_path=None):
         """
         Visualize the simulation results.
         
@@ -542,7 +535,11 @@ class QBDISwarmSimulation:
         plt.axis('equal')
         plt.tight_layout()
         
-        # Save figure
+        if save_path is None:
+            results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+            os.makedirs(results_dir, exist_ok=True)
+            save_path = os.path.join(results_dir, "simulation_result.png")
+        
         plt.savefig(save_path)
         plt.close()
         
@@ -553,10 +550,13 @@ class QBDISwarmSimulation:
         plt.ylabel('Swarm Entropy')
         plt.title('Swarm Entropy Over Time')
         plt.grid(True, alpha=0.3)
-        plt.savefig('/home/ubuntu/qbdi_implementation/entropy_over_time.png')
+        results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+        os.makedirs(results_dir, exist_ok=True)
+        entropy_path = os.path.join(results_dir, "entropy_over_time.png")
+        plt.savefig(entropy_path)
         plt.close()
     
-    def create_animation(self, results, save_path='/home/ubuntu/qbdi_implementation/simulation_animation.gif'):
+    def create_animation(self, results, save_path=None):
         """
         Create an animation of the simulation.
         
@@ -620,10 +620,13 @@ class QBDISwarmSimulation:
             
             return uav_scatter, metrics_text
         
-        # Create animation
         anim = FuncAnimation(fig, update, frames=num_frames, interval=100, blit=True)
         
-        # Save animation
+        if save_path is None:
+            results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+            os.makedirs(results_dir, exist_ok=True)
+            save_path = os.path.join(results_dir, "simulation_animation.gif")
+        
         anim.save(save_path, writer='pillow', fps=10)
         plt.close()
 

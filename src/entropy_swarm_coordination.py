@@ -5,7 +5,7 @@ This module implements the Shannon entropy function for measuring swarm coherenc
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import entropy
+import os
 
 class EntropySwarmCoordination:
     """
@@ -84,7 +84,10 @@ class EntropySwarmCoordination:
         plt.ylabel('Swarm Entropy')
         plt.title(title)
         plt.grid(True, alpha=0.3)
-        plt.savefig('/home/ubuntu/qbdi_implementation/entropy_history.png')
+        results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+        os.makedirs(results_dir, exist_ok=True)
+        save_path = os.path.join(results_dir, "entropy_history.png")
+        plt.savefig(save_path)
         plt.close()
         
     def visualize_trajectory_probabilities(self, title="UAV Trajectory Probabilities"):
@@ -102,7 +105,10 @@ class EntropySwarmCoordination:
         plt.xticks(range(self.num_uavs))
         plt.ylim(0, 1)
         plt.grid(True, alpha=0.3)
-        plt.savefig('/home/ubuntu/qbdi_implementation/trajectory_probabilities.png')
+        results_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "results")
+        os.makedirs(results_dir, exist_ok=True)
+        save_path = os.path.join(results_dir, "trajectory_probabilities.png")
+        plt.savefig(save_path)
         plt.close()
 
 

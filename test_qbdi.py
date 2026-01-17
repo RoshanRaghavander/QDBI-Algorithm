@@ -6,17 +6,12 @@ This script tests the core QBDI algorithms and the UAV swarm simulation.
 import sys
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 
-# Add the src directory to the Python path
-sys.path.append('/home/ubuntu/qbdi_implementation/src')
-
-# Import QBDI components
-from qaoa_decision_model import QAOADecisionModel
-from entropy_swarm_coordination import EntropySwarmCoordination
-from quantum_stigmergic_communication import QuantumStigmergicCommunication
-from mycelial_memory_network import MycelialMemoryNetwork
-from uav_swarm_simulation import QBDISwarmSimulation
+from src.qaoa_decision_model import QAOADecisionModel
+from src.entropy_swarm_coordination import EntropySwarmCoordination
+from src.quantum_stigmergic_communication import QuantumStigmergicCommunication
+from src.mycelial_memory_network import MycelialMemoryNetwork
+from src.uav_swarm_simulation import QBDISwarmSimulation
 
 def test_qaoa_decision_model():
     """Test the QAOA-based quantum decision model."""
